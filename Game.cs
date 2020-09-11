@@ -10,10 +10,19 @@ namespace HelloWorld
         public int health;
         public int damage;
         public int defense;
+        public item item;
+    }
+    struct item
+    {
+        public string name;
+        public int statboost;
     }
     class Game
     {
-        Player player1;
+        Player player1, player2;
+        item sword,rappier,broadSword,dagger;
+
+        bool _singlePlayer = true;
         bool _gameOver = false;
         int _levelScaleMax = 5;
         //Run the game
@@ -28,6 +37,77 @@ namespace HelloWorld
 
             End();
         }
+        void initilizeItems()
+        {
+            sword.name = "sword";
+            sword.statboost = 15;
+
+            rappier.name = "rappier";
+            rappier.statboost = 30;
+
+            broadSword.name = "broadsword";
+            broadSword.statboost = 40;
+
+            dagger.name = "dagger";
+            dagger.statboost = 5;
+        }
+        void initilizePlayers()
+        {
+            player1.name = "player1";
+            player1.health = 100;
+            player1.damage = 10;
+            player1.defense = 10;
+
+
+            player2.name = "player2";
+            player2.health = 100;
+            player2.damage = 10;
+            player2.defense = 10;
+        }
+
+        void introductions(ref Player player)
+        {
+            Console.WriteLine("welcome " + player.name + " what's your true name");
+            Console.Write("> ");
+            player.name = Console.ReadLine();
+            Console.Clear();
+            Console.WriteLine("welcome " +player.name+" choose your weapon");
+            char input = ' ';
+            GetInput(out input,"sword","rappier","broadSword","dagger");
+            if (input == '1')
+            {
+                Console.WriteLine("you choose a sword!");
+                Console.WriteLine("the sword boost your damage by 15");
+                player.item = sword;
+                player.damage += sword.statboost;
+            }
+            else if (input == '2')
+            {
+                player.item = rappier;
+                player.damage += rappier.statboost;
+                Console.WriteLine("you choose a rappier!");
+                Console.WriteLine("the rappier boost your damage by 30");
+            }
+            else if(input == '3')
+            {
+                player.item = broadSword;
+                player.damage += broadSword.statboost;
+                Console.WriteLine("you choose a broadSword!");
+                Console.WriteLine("the broadSword boost your damage by 40");
+            }
+            else if(input == '4')
+            {
+                player.item = dagger;
+                player.damage += dagger.statboost;
+                Console.WriteLine("you choose a dagger!");
+                Console.WriteLine("the dagger boost your damage by 5");
+            }
+            Console.WriteLine("press any key to continue");
+            Console.Write("> ");
+            Console.ReadKey();
+            Console.Clear();
+        }
+
         //This function handles the battles for our ladder. roomNum is used to update the our opponent to be the enemy in the current room. 
         //turnCount is used to keep track of how many turns it took the player to beat the enemy
         bool StartBattle(int roomNum, ref int turnCount)
@@ -114,6 +194,51 @@ namespace HelloWorld
             return player1.health != 0;
 
         }
+
+        bool PVPBattle() 
+        {
+            while(player1.health > 0 && player2.health > 0)
+            {
+                PrintStats(player1);
+                PrintStats(player2);
+                char input = ' ';
+                Console.WriteLine();
+                Console.WriteLine(player1.name+"'s turn");
+                GetInput(out input,"attack","defend");
+                if (input == '1')
+                {
+                    BlockAttack(ref player2.health, player1.damage, player2.defense);
+                    Console.WriteLine("You dealt " + (player1.damage - player2.defense) + " damage.");
+                    Console.Write("> ");
+                    Console.ReadKey();
+                    Console.Clear();
+                }
+                else if(input == '2')
+                {
+                    Console.WriteLine("you can't defend");
+                }
+                PrintStats(player1);
+                PrintStats(player2);
+                char input2 = ' ';
+                Console.WriteLine();
+                Console.WriteLine(player2.name + "'s turn");
+                GetInput(out input2, "attack", "defend");
+                if (input == '1')
+                {
+                    BlockAttack(ref player1.health, player2.damage, player1.defense);
+                    Console.WriteLine("You dealt " + (player2.damage - player1.defense) + " damage.");
+                    Console.Write("> ");
+                    Console.ReadKey();
+                    Console.Clear();
+                }
+                else if (input == '2')
+                {
+                    Console.WriteLine("you can't defend");
+                }
+
+            }
+            return true;
+        }
         //Decrements the health of a character. The attack value is subtracted by that character's defense
         void BlockAttack(ref int opponentHealth, int attackVal, int opponentDefense)
         {
@@ -159,19 +284,23 @@ namespace HelloWorld
         //Gets input from the player
         //Out's the char variable given. This variables stores the player's input choice.
         //The parameters option1 and option 2 displays the players current chpices to the screen
-        Char GetInput(out char input,string option1, string option2,string option3 = " ")
+        Char GetInput(out char input,string option1, string option2,string option3 = " ", string option4 = " ")
         {
             //Initialize input
             input = ' ';
             //Loop until the player enters a valid input
             
-            while (input != '1' && input != '2' && input != '3')
+            while (input != '1' && input != '2' && input != '3' && input != '4')
             {
                 Console.WriteLine("1." + option1);
                 Console.WriteLine("2." + option2);
                 if(option3 != " ")
                 {
                     Console.WriteLine("3." + option3);
+                }
+                if (option4 != " ")
+                {
+                    Console.WriteLine("4." + option4);
                 }
                 Console.Write("> ");
                 input = Console.ReadKey().KeyChar;
@@ -194,6 +323,7 @@ namespace HelloWorld
             Console.WriteLine("Health: " + player.health);
             Console.WriteLine("Damage: " + player.damage);
             Console.WriteLine("Defense: " + player.defense);
+            Console.WriteLine("item: " + player.item.name);
         }
         void shop(int roomNum,string enemyName)
         {
@@ -327,26 +457,63 @@ namespace HelloWorld
         //Performed once when the game begins
         public void Start()
         {
-            SelectCharacter();
+            initilizePlayers();
+            initilizeItems();
+
+            char input = ' ';
+            GetInput(out input,"singlePlayer","multiPlayer");
+            if(input == '1')
+            {
+                SelectCharacter();
+            }
+            else if(input == '2')
+            {
+                _singlePlayer = false;
+                introductions(ref player1);
+                introductions(ref player2);
+            }
         }
 
         //Repeated until the game ends
         public void Update()
         {
-            ClimbLadder(0);   
+            if (_singlePlayer)
+            {
+                ClimbLadder(0);  
+            }
+            else
+            {
+                _gameOver = PVPBattle();
+            }
+             
         }
 
         //Performed once when the game ends
         public void End()
         {
-            //If the player died print death message
-            if(player1.health <= 0)
+            if (_singlePlayer)
             {
-                Console.WriteLine("Failure");
-                return;
+                //If the player died print death message
+                if(player1.health <= 0)
+                {
+                    Console.WriteLine("Failure");
+                    return;
+                }
+                //Print game over message
+                Console.WriteLine("Congrats");
             }
-            //Print game over message
-            Console.WriteLine("Congrats");
+            else
+            {
+                if(player1.health > 0)
+                {
+                    Console.WriteLine("congrats you won " + player1.name);
+                }
+                else
+                {
+                    Console.WriteLine("congrats you won " + player2.name);
+                }
+            }
         }
+            
     }
 }
